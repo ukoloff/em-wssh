@@ -60,6 +60,10 @@ module Ssh
   end
 end
 
+def resolve(path)
+  'github.com'
+end
+
 EM.run do
   EM::WebSocket.run host: "0.0.0.0", port: port do |ws|
 
@@ -68,7 +72,12 @@ EM.run do
 
     ws.onopen do |handshake|
       log "Request", handshake.path
-      EM.connect 'github.com', 22, Ssh do |conn|
+      unless host = resolve(handshake.path) rescue nil
+        log "Invalid host"
+        ws.close
+        next
+      end
+      EM.connect host, 22, Ssh do |conn|
         client = conn
         client.ws = ws
         buf.each{|data| client.send_data buf}
