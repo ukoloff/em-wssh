@@ -48,12 +48,9 @@ module Ssh
 
   def post_init
     log "Connected to SSH server"
-    # buf.each{|data| send_data buf}
-    self.buf=nil
   end
 
   def receive_data data
-    log "From SSH"
     ws.send data
   end
 
@@ -67,21 +64,21 @@ EM.run do
   EM::WebSocket.run host: "0.0.0.0", port: port do |ws|
 
     client = nil
+    buf = []
 
     ws.onopen do |handshake|
       log "Request", handshake.path
       EM.connect 'github.com', 22, Ssh do |conn|
-        log "+++"
         client = conn
         client.ws = ws
-        # client.buf = []
+        buf.each{|data| client.send_data buf}
+        buf = nil
       end
     end
 
     ws.onbinary do |msg|
-      log "From WS"
-      if client.buf
-        client.buf.push msg
+      if buf
+        buf.push msg
       else
         client.send_data msg
       end
