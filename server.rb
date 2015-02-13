@@ -61,6 +61,22 @@ module Ssh
 end
 
 def resolve(path)
+  path = path.to_s
+  .split(/[^-.\w]+/)
+  .select{|s|s.length>0}
+  .select{|s|!s.match /^[-_.]|[-_.]$/}
+  .last
+  yml = YAML.load_file File.dirname(__FILE__)+'/hosts.yml'
+
+  if yml.key? path
+    host = yml[path]
+    raise 'X' unless host
+    host = path if true===host
+    host = host.to_s.strip
+    raise 'X' if 0==host.length
+    return host
+  end
+
   'github.com'
 end
 
@@ -77,6 +93,7 @@ EM.run do
         ws.close
         next
       end
+      log "Connecting to", host
       EM.connect host, 22, Ssh do |conn|
         client = conn
         client.ws = ws
