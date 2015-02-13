@@ -77,7 +77,18 @@ def resolve(path)
     return host
   end
 
-  'github.com'
+  host=nil
+
+  yml.each do |k, v|
+    next unless m=/^\/(.*)\/(i?)$/.match(k)
+    next unless Regexp.new(m[1], m[2]).match path
+    raise 'X' unless v
+    host = true===v ? path : v
+    host = host.to_s.strip
+    raise 'X' if 0==host.length
+  end
+  raise 'X' unless host
+  host
 end
 
 EM.run do
