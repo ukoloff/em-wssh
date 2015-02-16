@@ -45,6 +45,15 @@ end
 
 log "Running d=#{daemon} on port #{port}"
 
+def pid
+  require 'fileutils'
+  FileUtils.mkdir_p pid=File.dirname(__FILE__)+'/tmp/pids'
+  File.write pid+='/wsshd.pid', $$
+  at_exit{File.unlink pid}
+end
+
+pid
+
 module Ssh
   attr_accessor :ws, :buf
 
