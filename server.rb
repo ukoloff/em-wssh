@@ -80,7 +80,7 @@ module Ssh
   end
 
   def receive_data data
-    ws.send data
+    ws.send_binary data
   end
 
   def unbind
