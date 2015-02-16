@@ -1,4 +1,5 @@
 require 'yaml'
+require 'fileutils'
 require 'getoptlong'
 require 'em-websocket'
 
@@ -43,10 +44,27 @@ def log(*msg)
   puts msg*' '
 end
 
-log "Running d=#{daemon} on port #{port}"
+def daemonize
+  throw 'Cannot daemonize on Windows!' if Gem.win_platform?
+
+  log "Going on in background..."
+
+  FileUtils.mkdir_p log=File.dirname(__FILE__)+'/log'
+  log = File.open log+'/wsshd.log', 'a'
+  log.sync=true
+
+  STDIN.reopen '/dev/null'
+  STDOUT.reopen log
+  STDERR.reopen log
+
+  Process.daemon true, true
+end
+
+daemonize if daemon
+
+log "Running on port #{port}"
 
 def pid
-  require 'fileutils'
   FileUtils.mkdir_p pid=File.dirname(__FILE__)+'/tmp/pids'
   File.write pid+='/wsshd.pid', $$
   at_exit{File.unlink pid}
