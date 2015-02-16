@@ -36,6 +36,8 @@ rescue
   help
 end
 
+help unless ARGV.empty?
+
 def log(*msg)
   msg.unshift "[#{Time.now}]"
   puts msg*' '
