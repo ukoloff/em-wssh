@@ -67,7 +67,10 @@ log "Running on port #{port}"
 def pid
   FileUtils.mkdir_p pid=File.dirname(__FILE__)+'/tmp/pids'
   File.write pid+='/wsshd.pid', $$
-  at_exit{File.unlink pid}
+  at_exit do
+    log "Exiting..."
+    File.unlink pid
+  end
 end
 
 pid
