@@ -81,7 +81,7 @@ module HttpConn
   end
 
   def wssh data
-    @ws.send data.unpack 'C*'
+    @ws.send data.unpack 'C*' if data.length>0
   end
 
   def receive_data data
@@ -100,8 +100,7 @@ module HttpConn
 
   def receive_line line
     @n||=0
-    @n+=1
-    if @n>1
+    if 1<@n+=1
       connect_wssh if 0==line.length
     else
       parse line
@@ -109,7 +108,8 @@ module HttpConn
   end
 
   def connect_wssh
-    @pass = true
+    @pass = @buf
+    @buf=''
     send_data "HTTP/1.0 200 Ok\r\n\r\n"
 
     log "Redirect to", uri="#{ARGV[0]}/#{@wssh}"
@@ -117,8 +117,8 @@ module HttpConn
 
     @ws.on :open do |event|
       log "Connected to WSSHD"
-      wssh @buf
-      @buf=nil
+      wssh @pass
+      @pass=true
     end
 
     @ws.on :message do |event|
@@ -132,8 +132,8 @@ module HttpConn
   end
 
   def parse line
-    verb, dst = line.split
-    return @wssh = dst[1] if 'connect'==verb.downcase and dst=/^([-.\w]+):22$/.match(dst)
+    m=/^connect\s+([-.\w]+):22(?:$|\s)/i.match line
+    return @wssh = m[1] if m
     send_data "HTTP/1.0 500 Bad request\r\n\r\n"
     close_connection
   end
