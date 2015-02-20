@@ -85,7 +85,14 @@ module HttpConn
   end
 
   def receive_data data
-    return wssh data if @pass
+    if @pass
+      if String===@pass
+        @pass << data
+      else
+        wssh data
+      end
+      return
+    end
 
     if @buf
       @buf<<data
@@ -122,7 +129,7 @@ module HttpConn
     end
 
     @ws.on :message do |event|
-      send_data event.data.pack 'C*'
+      send_data Array===event.data ? event.data.pack('C*') : event.data
     end
 
     @ws.on :close do
