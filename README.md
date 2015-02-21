@@ -65,3 +65,4 @@ To connect to TLS WSSH server, you should use Node.js version.
   * [EM-WebSocket](https://github.com/igrigorik/em-websocket)
   * [faye-websocket](https://github.com/faye/faye-websocket-ruby)
   * [Node.js](http://nodejs.org/)
+  * [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/)
