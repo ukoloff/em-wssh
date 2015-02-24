@@ -85,29 +85,29 @@ module HttpConn
   end
 
   def receive_data data
-    if @pass
-      if String===@pass
-        @pass << data
+    if @body
+      if Array===@body
+        @body << data
       else
         wssh data
       end
       return
     end
 
-    if @buf
-      @buf<<data
+    if @hdrs
+      @hdrs << data
     else
-      @buf=data
+      @hdrs = data
     end
-    while m=/\r?\n/.match(@buf)
-      @buf=m.post_match
+    while m=/\r?\n/.match(@hdrs)
+      @hdrs=m.post_match
       receive_line m.pre_match
     end
   end
 
   def receive_line line
-    @n||=0
-    if 1<@n+=1
+    @nhdr||=0
+    if (@nhdr+=1)>1
       connect_wssh if 0==line.length
     else
       parse line
@@ -115,8 +115,8 @@ module HttpConn
   end
 
   def connect_wssh
-    @pass = @buf
-    @buf=''
+    @body = [@hdrs]
+    @hdrs=''
     send_data "HTTP/1.0 200 Ok\r\n\r\n"
 
     log "Redirect to", uri="#{ARGV[0]}/#{@wssh}"
@@ -124,8 +124,8 @@ module HttpConn
 
     @ws.on :open do |event|
       log "Connected to WSSHD"
-      wssh @pass
-      @pass=true
+      @body.each{|data|wssh data}
+      @body=true
     end
 
     @ws.on :message do |event|
