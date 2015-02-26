@@ -103,7 +103,7 @@ EOF
     def post_init
       log "Connected to SSH server"
       req.ssh=self
-      req.buf.each{|data| ssh.send_data data}
+      req.buf.each{|data| send_data data}
       req.buf=nil
     end
 
