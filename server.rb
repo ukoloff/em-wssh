@@ -211,7 +211,7 @@ EOF
     def bye
       ssh.close_connection if ssh
       ws.close if ws
-      instance_variables.each{|v| remove_instance_variable v unless :'@count'==v}
+      instance_variables.each{|v| remove_instance_variable v if '@count'!=v.to_s}
     end
   end
 
