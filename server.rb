@@ -163,7 +163,7 @@ EOF
   end
 
   def self.ws_error(err, req)
-    log "ErRor...", err
+    log "Error...", err
     req[:ssh].close_connection if req[:ssh]
   end
 
