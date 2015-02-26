@@ -222,6 +222,6 @@ EOF
     end
   end
 
-end
+  go
 
-Server.go
+end
