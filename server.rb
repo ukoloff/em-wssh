@@ -1,15 +1,28 @@
 require 'yaml'
 require 'fileutils'
-require 'getoptlong'
 require 'em-websocket'
 
-opts = GetoptLong.new(
-  ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
-  ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
-)
+module Server
+  @options={
+    port: 4567,
+    daemon: false,
+  }
 
-def help
-  puts <<-EOF
+  def self.options
+    @options
+  end
+
+  def self.log *msg
+    msg.unshift "[#{Time.now}]"
+    puts msg*' '
+  end
+
+  def log *msg
+    Server.log *msg
+  end
+
+  def self.help
+    puts <<-EOF
 wssh - proxy ssh thru websocket
 
 Usage: #{File.basename __FILE__} [options...]
@@ -18,149 +31,164 @@ Usage: #{File.basename __FILE__} [options...]
   -d --daemon      Run daemonized
   -h --help        Show this help
 EOF
-  exit 1
-end
+    exit 1
+  end
 
-port = 4567
-daemon = false
+  def self.getopt
+    require 'getoptlong'
 
-begin
-  opts.each do |opt, arg|
-    case opt
-    when '-d'
-      daemon=true
-    when '-l'
-      port=arg
+    opts = GetoptLong.new(
+      ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
+      ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
+    )
+    begin
+      opts.each do |opt, arg|
+        case opt
+        when '-d'
+          options[:daemon]=true
+        when '-l'
+          options[:port]=arg
+        end
+      end
+    rescue
+      help
+    end
+    help unless ARGV.empty?
+  end
+
+  def self.daemonize!
+    throw 'Cannot daemonize on Windows!' if Gem.win_platform?
+
+    log "Going on in background..."
+
+    FileUtils.mkdir_p log=File.dirname(__FILE__)+'/log'
+    log = File.open log+'/wsshd.log', 'a'
+    log.sync=true
+
+    STDIN.reopen '/dev/null'
+    STDOUT.reopen log
+    STDERR.reopen log
+
+    Process.daemon true, true
+  end
+
+  def self.daemonize?
+    daemonize! if options[:daemon]
+  end
+
+  def self.pid
+    FileUtils.mkdir_p pid=File.dirname(__FILE__)+'/tmp/pids'
+    File.write pid+='/wsshd.pid', $$
+    at_exit do
+      log "Exiting..."
+      File.unlink pid
     end
   end
-rescue
-  help
-end
 
-help unless ARGV.empty?
-
-def log(*msg)
-  msg.unshift "[#{Time.now}]"
-  puts msg*' '
-end
-
-def daemonize
-  throw 'Cannot daemonize on Windows!' if Gem.win_platform?
-
-  log "Going on in background..."
-
-  FileUtils.mkdir_p log=File.dirname(__FILE__)+'/log'
-  log = File.open log+'/wsshd.log', 'a'
-  log.sync=true
-
-  STDIN.reopen '/dev/null'
-  STDOUT.reopen log
-  STDERR.reopen log
-
-  Process.daemon true, true
-end
-
-daemonize if daemon
-
-log "Running on port #{port}"
-
-def pid
-  FileUtils.mkdir_p pid=File.dirname(__FILE__)+'/tmp/pids'
-  File.write pid+='/wsshd.pid', $$
-  at_exit do
-    log "Exiting..."
-    File.unlink pid
+  def self.go
+    getopt
+    daemonize?
+    log "Running on port #{options[:port]}"
+    pid
+    EM.run do
+      EM::WebSocket.run host: "0.0.0.0", port: options[:port]{|ws| request ws}
+    end
   end
-end
 
-pid
+  def self.request ws
+    req = {
+      ws: ws,
+      buf: []
+    }
 
-module Ssh
-  attr_accessor :ws, :buf
+    ws.onopen{|handshake| ws_open handshake, req}
+    ws.onbinary{|msg| ws_data msg, req}
+    ws.onclose{|code, body| ws_close req}
+    ws.onerror{|err| ws_error err, req}
+  end
 
+  def self.resolve(path)
+    path = path.to_s
+    .split(/[^-.\w]+/)
+    .select{|s|s.length>0}
+    .select{|s|!s.match /^[-_.]|[-_.]$/}
+    .last
+    yml = YAML.load_file File.dirname(__FILE__)+'/hosts.yml'
+
+    if yml.key? path
+      host = yml[path]
+      raise 'X' unless host
+      host = path if true===host
+      host = host.to_s.strip
+      raise 'X' if 0==host.length
+      return host
+    end
+
+    host=nil
+
+    yml.each do |k, v|
+      next unless m=/^\/(.*)\/(i?)$/.match(k)
+      next unless Regexp.new(m[1], m[2]).match path
+      raise 'X' unless v
+      host = true===v ? path : v
+      host = host.to_s.strip
+      raise 'X' if 0==host.length
+    end
+    raise 'X' unless host
+    host
+  end
+
+  def self.ws_open(handshake, req)
+    log "Request", handshake.path
+    unless host = resolve(handshake.path) rescue nil
+      log "Invalid host"
+      req[:ws].close
+      return
+    end
+    log "Connecting to", host
+    EM.connect host, 22, self, req
+  end
+
+  def self.ws_data(msg, req)
+    if req[:buf]
+      req[:buf] << msg
+    else
+      req[:ssh].send_data msg
+    end
+  end
+
+  def self.ws_close(req)
+    log 'Client closed connection'
+    req[:ssh].close_connection if req[:ssh]
+  end
+
+  def self.ws_error(err, req)
+    log "ErRor...", err
+    req[:ssh].close_connection if req[:ssh]
+  end
+
+  def initialize(req)
+    @req=req
+  end
+
+  # Connected to SSH
   def post_init
     log "Connected to SSH server"
+    @req[:ssh]=self
+    @req[:buf].each{|data| @req[:ssh].send_data data}
+    @req[:buf] = nil
   end
 
+  # Data from SSH
   def receive_data data
-    ws.send_binary data
+    @req[:ws].send_binary data
   end
 
+  # SSH disconnect
   def unbind
     log 'SSH server closed connection'
-    ws.close
+    @req[:ws].close
   end
 end
 
-def resolve(path)
-  path = path.to_s
-  .split(/[^-.\w]+/)
-  .select{|s|s.length>0}
-  .select{|s|!s.match /^[-_.]|[-_.]$/}
-  .last
-  yml = YAML.load_file File.dirname(__FILE__)+'/hosts.yml'
-
-  if yml.key? path
-    host = yml[path]
-    raise 'X' unless host
-    host = path if true===host
-    host = host.to_s.strip
-    raise 'X' if 0==host.length
-    return host
-  end
-
-  host=nil
-
-  yml.each do |k, v|
-    next unless m=/^\/(.*)\/(i?)$/.match(k)
-    next unless Regexp.new(m[1], m[2]).match path
-    raise 'X' unless v
-    host = true===v ? path : v
-    host = host.to_s.strip
-    raise 'X' if 0==host.length
-  end
-  raise 'X' unless host
-  host
-end
-
-EM.run do
-  EM::WebSocket.run host: "0.0.0.0", port: port do |ws|
-
-    client = nil
-    buf = []
-
-    ws.onopen do |handshake|
-      log "Request", handshake.path
-      unless host = resolve(handshake.path) rescue nil
-        log "Invalid host"
-        ws.close
-        next
-      end
-      log "Connecting to", host
-      EM.connect host, 22, Ssh do |conn|
-        client = conn
-        client.ws = ws
-        buf.each{|data| client.send_data buf}
-        buf = nil
-      end
-    end
-
-    ws.onbinary do |msg|
-      if buf
-        buf.push msg
-      else
-        client.send_data msg
-      end
-    end
-
-    ws.onclose do
-      log 'Client closed connection'
-      client.close_connection if client
-    end
-
-    ws.onerror do |err|
-      log "Error...", err
-      client.close_connection if client
-    end
-  end
-end
+Server.go
