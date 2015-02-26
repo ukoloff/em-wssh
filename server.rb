@@ -210,18 +210,26 @@ EOF
     end
   end
 
-  def self.go
+  def self.listen!
+    EM::WebSocket.run host: "0.0.0.0", port: options[:port] do |ws|
+      Req.new ws
+    end
+  end
+
+  def self.loop
+    require 'yaml'
+    require 'em-websocket'
+    EM.run{ listen! }
+  end
+
+  def self.go!
     getopt
     daemonize?
     log "Running on port #{options[:port]}"
     pid
-    require 'yaml'
-    require 'em-websocket'
-    EM.run do
-      EM::WebSocket.run host: "0.0.0.0", port: options[:port]{|ws| Req.new ws}
-    end
+    loop
   end
 
-  go
+  go!
 
 end
