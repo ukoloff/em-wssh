@@ -2,6 +2,10 @@ module Server
   @options={
     port: 4567,
     daemon: false,
+    root: File.dirname(__FILE__),
+    hosts: 'hosts.yml',
+    log: 'log/wsshd.log',
+    pid: 'tmp/pids/wsshd.pid',
   }
 
   def self.options
@@ -17,7 +21,7 @@ module Server
     puts <<-EOF
 wssh - proxy ssh thru websocket
 
-Usage: #{File.basename __FILE__} [options...]
+Usage: ruby #{File.basename __FILE__} [options...]
 
   -l --listen=port Listen to port
   -d --daemon      Run daemonized
@@ -48,9 +52,14 @@ EOF
     help unless ARGV.empty?
   end
 
-  def self.mkdir path
+  def self.path(sym)
+    File.join options[:root], options[sym]
+  end
+
+  def self.mkdir(sym)
     require 'fileutils'
-    FileUtils.mkdir_p path
+    FileUtils.mkdir_p File.dirname file=(path sym)
+    file
   end
 
   def self.daemonize!
@@ -58,13 +67,12 @@ EOF
 
     log "Going on in background..."
 
-    mkdir log=File.dirname(__FILE__)+'/log'
-    log = File.open log+'/wsshd.log', 'a'
-    log.sync=true
+    f = File.open mkdir(:log), 'a'
+    f.sync=true
 
     STDIN.reopen '/dev/null'
-    STDOUT.reopen log
-    STDERR.reopen log
+    STDOUT.reopen f
+    STDERR.reopen f
 
     Process.daemon true, true
   end
@@ -74,11 +82,10 @@ EOF
   end
 
   def self.pid
-    mkdir pid=File.dirname(__FILE__)+'/tmp/pids'
-    File.write pid+='/wsshd.pid', $$
+    File.write p=mkdir(:pid), $$
     at_exit do
       log "Exiting..."
-      File.unlink pid
+      File.unlink p
     end
   end
 
@@ -113,7 +120,7 @@ EOF
     .select{|s|s.length>0}
     .select{|s|!s.match /^[-_.]|[-_.]$/}
     .last
-    yml = YAML.load_file File.dirname(__FILE__)+'/hosts.yml'
+    yml = YAML.load_file path(:hosts)
 
     if yml.key? path
       host = yml[path]
