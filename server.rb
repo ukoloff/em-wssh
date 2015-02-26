@@ -17,10 +17,6 @@ module Server
     puts msg*' '
   end
 
-  def log *msg
-    Server.log *msg
-  end
-
   def self.help
     puts <<-EOF
 wssh - proxy ssh thru websocket
@@ -169,6 +165,12 @@ EOF
 
   def initialize(req)
     @req=req
+  end
+
+  Me = self
+
+  def log *msg
+    Me.log *msg
   end
 
   # Connected to SSH
