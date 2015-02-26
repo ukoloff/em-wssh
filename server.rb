@@ -93,8 +93,9 @@ EOF
 
   def self.request ws
     req = {
+      klass: self,
       ws: ws,
-      buf: []
+      buf: [],
     }
 
     ws.onopen{|handshake| ws_open handshake, req}
@@ -167,10 +168,8 @@ EOF
     @req=req
   end
 
-  Me = self
-
   def log *msg
-    Me.log *msg
+    @req[:klass].log *msg
   end
 
   # Connected to SSH
