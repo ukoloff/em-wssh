@@ -147,7 +147,7 @@ EOF
       log "Request", handshake.path
       unless host = resolve(handshake.path) rescue nil
         log "Invalid host"
-        req.bye
+        bye
         return
       end
       log "Connecting to", host
