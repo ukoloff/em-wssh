@@ -89,6 +89,120 @@ EOF
     end
   end
 
+  module Ssh
+    attr_accessor :req
+
+    def initialize req
+      self.req=req
+    end
+
+    def log *msg
+      req.log *msg
+    end
+
+    def post_init
+      log "Connected to SSH server"
+      req.ssh=self
+      req.buf.each{|data| ssh.send_data data}
+      req.buf=nil
+    end
+
+    def receive_data data
+      req.ws.send_binary data
+    end
+
+    def unbind
+      log 'SSH server closed connection'
+      req.bye
+    end
+  end
+
+  class Req
+    attr_accessor :ws, :buf, :ssh
+
+    Server=Module.nesting[1]
+
+    def initialize ws
+      self.ws=ws
+      self.buf=[]
+
+      ws.onopen{|handshake| onopen handshake}
+      ws.onbinary{|msg| ondata msg}
+      ws.onclose{|code, body| onclose}
+      ws.onerror{|err| onerror err}
+    end
+
+    def log *msg
+      Server.log *msg
+    end
+
+    def onopen handshake
+      log "Request", handshake.path
+      unless host = resolve(handshake.path) rescue nil
+        log "Invalid host"
+        req.bye
+        return
+      end
+      log "Connecting to", host
+      EM.connect host, 22, Ssh, self
+    end
+
+    def ondata msg
+      if buf
+        buf << msg
+      else
+        ssh.send_data msg
+      end
+    end
+
+    def onclose
+      log 'Client closed connection'
+      bye
+    end
+
+    def onerror err
+      log "Websocket error", err
+      bye
+    end
+
+    def resolve(path)
+      path = path.to_s
+      .split(/[^-.\w]+/)
+      .select{|s|s.length>0}
+      .select{|s|!s.match /^[-_.]|[-_.]$/}
+      .last
+      yml = YAML.load_file Server.path(:hosts)
+
+      if yml.key? path
+        host = yml[path]
+        raise 'X' unless host
+        host = path if true===host
+        host = host.to_s.strip
+        raise 'X' if 0==host.length
+        return host
+      end
+
+      host=nil
+
+      yml.each do |k, v|
+        next unless m=/^\/(.*)\/(i?)$/.match(k)
+        next unless Regexp.new(m[1], m[2]).match path
+        raise 'X' unless v
+        host = true===v ? path : v
+        host = host.to_s.strip
+        raise 'X' if 0==host.length
+      end
+      raise 'X' unless host
+      host
+    end
+
+    def bye
+      ssh.close_connection if ssh
+      ws.close if ws
+      instance_variables.each{|v|remove_instance_variable v}
+    end
+  end
+
   def self.go
     getopt
     daemonize?
@@ -97,109 +211,10 @@ EOF
     require 'yaml'
     require 'em-websocket'
     EM.run do
-      EM::WebSocket.run host: "0.0.0.0", port: options[:port]{|ws| request ws}
+      EM::WebSocket.run host: "0.0.0.0", port: options[:port]{|ws| Req.new ws}
     end
   end
 
-  def self.request ws
-    req = {
-      klass: self,
-      ws: ws,
-      buf: [],
-    }
-
-    ws.onopen{|handshake| ws_open handshake, req}
-    ws.onbinary{|msg| ws_data msg, req}
-    ws.onclose{|code, body| ws_close req}
-    ws.onerror{|err| ws_error err, req}
-  end
-
-  def self.resolve(path)
-    path = path.to_s
-    .split(/[^-.\w]+/)
-    .select{|s|s.length>0}
-    .select{|s|!s.match /^[-_.]|[-_.]$/}
-    .last
-    yml = YAML.load_file path(:hosts)
-
-    if yml.key? path
-      host = yml[path]
-      raise 'X' unless host
-      host = path if true===host
-      host = host.to_s.strip
-      raise 'X' if 0==host.length
-      return host
-    end
-
-    host=nil
-
-    yml.each do |k, v|
-      next unless m=/^\/(.*)\/(i?)$/.match(k)
-      next unless Regexp.new(m[1], m[2]).match path
-      raise 'X' unless v
-      host = true===v ? path : v
-      host = host.to_s.strip
-      raise 'X' if 0==host.length
-    end
-    raise 'X' unless host
-    host
-  end
-
-  def self.ws_open(handshake, req)
-    log "Request", handshake.path
-    unless host = resolve(handshake.path) rescue nil
-      log "Invalid host"
-      req[:ws].close
-      return
-    end
-    log "Connecting to", host
-    EM.connect host, 22, self, req
-  end
-
-  def self.ws_data(msg, req)
-    if req[:buf]
-      req[:buf] << msg
-    else
-      req[:ssh].send_data msg
-    end
-  end
-
-  def self.ws_close(req)
-    log 'Client closed connection'
-    req[:ssh].close_connection if req[:ssh]
-  end
-
-  def self.ws_error(err, req)
-    log "Error...", err
-    req[:ssh].close_connection if req[:ssh]
-  end
-
-  def initialize(req)
-    @req=req
-  end
-
-  def log *msg
-    @req[:klass].log *msg
-  end
-
-  # Connected to SSH
-  def post_init
-    log "Connected to SSH server"
-    @req[:ssh]=self
-    @req[:buf].each{|data| @req[:ssh].send_data data}
-    @req[:buf] = nil
-  end
-
-  # Data from SSH
-  def receive_data data
-    @req[:ws].send_binary data
-  end
-
-  # SSH disconnect
-  def unbind
-    log 'SSH server closed connection'
-    @req[:ws].close
-  end
 end
 
 Server.go
