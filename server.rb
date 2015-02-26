@@ -1,7 +1,3 @@
-require 'yaml'
-require 'fileutils'
-require 'em-websocket'
-
 module Server
   @options={
     port: 4567,
@@ -52,12 +48,17 @@ EOF
     help unless ARGV.empty?
   end
 
+  def self.mkdir path
+    require 'fileutils'
+    FileUtils.mkdir_p path
+  end
+
   def self.daemonize!
     throw 'Cannot daemonize on Windows!' if Gem.win_platform?
 
     log "Going on in background..."
 
-    FileUtils.mkdir_p log=File.dirname(__FILE__)+'/log'
+    mkdir log=File.dirname(__FILE__)+'/log'
     log = File.open log+'/wsshd.log', 'a'
     log.sync=true
 
@@ -73,7 +74,7 @@ EOF
   end
 
   def self.pid
-    FileUtils.mkdir_p pid=File.dirname(__FILE__)+'/tmp/pids'
+    mkdir pid=File.dirname(__FILE__)+'/tmp/pids'
     File.write pid+='/wsshd.pid', $$
     at_exit do
       log "Exiting..."
@@ -86,6 +87,8 @@ EOF
     daemonize?
     log "Running on port #{options[:port]}"
     pid
+    require 'yaml'
+    require 'em-websocket'
     EM.run do
       EM::WebSocket.run host: "0.0.0.0", port: options[:port]{|ws| request ws}
     end
