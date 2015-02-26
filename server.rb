@@ -122,9 +122,16 @@ EOF
 
     Server=Module.nesting[1]
 
+    def self.count
+      @n||=0
+      @n+=1
+    end
+
     def initialize ws
       self.ws=ws
       self.buf=[]
+
+      @count=self.class.count
 
       ws.onopen{|handshake| onopen handshake}
       ws.onbinary{|msg| ondata msg}
@@ -133,7 +140,7 @@ EOF
     end
 
     def log *msg
-      Server.log *msg
+      Server.log "<#{@count}>", *msg
     end
 
     def onopen handshake
@@ -199,7 +206,7 @@ EOF
     def bye
       ssh.close_connection if ssh
       ws.close if ws
-      instance_variables.each{|v|remove_instance_variable v}
+      instance_variables.each{|v| remove_instance_variable v unless :'@count'==v}
     end
   end
 
