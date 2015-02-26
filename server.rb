@@ -1,5 +1,6 @@
 module Server
   @options={
+    host: 'localhost',
     port: 4567,
     daemon: false,
     root: File.dirname(__FILE__),
@@ -24,6 +25,7 @@ wssh - proxy ssh thru websocket
 Usage: ruby #{File.basename __FILE__} [options...]
 
   -l --listen=port Listen to port
+  -a --all         Listen to all interfaces
   -d --daemon      Run daemonized
   -h --help        Show this help
 EOF
@@ -36,6 +38,7 @@ EOF
     opts = GetoptLong.new(
       ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
       ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
+      ['-a', '--all', GetoptLong::NO_ARGUMENT],
     )
     begin
       opts.each do |opt, arg|
@@ -44,6 +47,8 @@ EOF
           options[:daemon]=true
         when '-l'
           options[:port]=arg
+        when '-a'
+          options[:host]='0.0.0.0'
         end
       end
     rescue
@@ -211,7 +216,7 @@ EOF
   end
 
   def self.listen!
-    EM::WebSocket.run host: "0.0.0.0", port: options[:port] do |ws|
+    EM::WebSocket.run host: options[:host], port: options[:port] do |ws|
       Req.new ws
     end
   end
@@ -225,7 +230,7 @@ EOF
   def self.go!
     getopt
     daemonize?
-    log "Running on port #{options[:port]}"
+    log "Listening on #{options[:host]}:#{options[:port]}"
     pid
     loop
   end
