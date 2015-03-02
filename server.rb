@@ -20,7 +20,7 @@ module Server
 
   def self.help
     puts <<-EOF
-wssh - proxy ssh thru websocket
+Proxy ssh connection through websocket
 
 Usage: ruby #{File.basename __FILE__} [options...]
 
