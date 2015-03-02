@@ -210,7 +210,7 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
         @hdrs=''
         log "Bad request"
         send_data "HTTP/1.0 500 Bad request\r\n\r\n"
-        close_connection
+        dst.bye
       else
         dst.connect! @wssh if 0==line.length
       end
