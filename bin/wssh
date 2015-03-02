@@ -1,0 +1,3 @@
+cmd = ARGV.shift
+throw "Invalid command '#{cmd}'" unless /^\w+$/.match cmd
+require "em/wssh/#{cmd}"
