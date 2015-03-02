@@ -82,7 +82,7 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
       @ws = Faye::WebSocket::Client.new uri
 
       @ws.on :open do |event| onopen end
-      @ws.on :message do |event| onmessage event end
+      @ws.on :message do |event| onmessage event.data end
       @ws.on :close do |event| onclose end
       @ws.on :error do |error| onerror error end
     end
@@ -92,8 +92,8 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
       http.onopen
     end
 
-    def onmessage event
-      http.send_data Array===event.data ? event.data.pack('C*') : event.data
+    def onmessage data
+      http.send_data Array===data ? data.pack('C*') : data
     end
 
     def onerror error
