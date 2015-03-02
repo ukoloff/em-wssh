@@ -1,60 +1,94 @@
-#
-# Simple client
-#
-# Fails on Windows (stdio)
-# See https://groups.google.com/forum/#!topic/eventmachine/5rDIOA2uOoA
-#
-require 'faye/websocket'
+module Client
+  Need=%w(faye/websocket)
 
-unless ARGV.length==1
-  puts <<EOT
+  def self.help
+    puts <<-EOT
 WSSH client
-Usage: #{File.basename $0} ws[s]://host[:port]/uri
-EOT
-  exit
-end
 
-STDOUT.sync=true
-
-module Stdio
-  attr_accessor :buf
-
-  def initialize(websocket)
-    @ws = websocket
+Usage: ruby #{File.basename __FILE__} ws[s]://host[:port]/uri
+    EOT
+    exit 1
   end
 
-  def ws_send data
-    @ws.send data.unpack 'C*'
+  def self.getopt
+    help if ARGV.length!=1
+    @uri=ARGV[0]
   end
 
-  def receive_data data
-    if buf
-      buf.push data
-    else
-      ws_send data
+  class Ws
+    def initialize uri
+      @buf=[]
+
+      @ws=Faye::WebSocket::Client.new uri
+
+      @ws.on :open do |event| onopen end
+      @ws.on :message do |event| onmessage event.data end
+      @ws.on :close do |event| onclose end
+      @ws.on :error do |error| onerror error end
+    end
+
+    def queue data
+      if @buf
+        @buf << data
+      else
+        @ws.send data
+      end
+    end
+
+    def onopen
+      @buf.each{|data| @ws.send data}
+      @buf=nil
+    end
+
+    def onmessage data
+      print data.pack 'C*'
+    end
+
+    def onclose
+      bye
+    end
+
+    def onerror error
+      bye
+    end
+
+    def bye
+      @ws.close if @ws
+      @ws=nil
+      @buf=nil
+      EM.stop_event_loop
     end
   end
 
-  def unbind
-    EM.stop_event_loop
-  end
-end
+  module Stdio
+    def initialize ws
+      @ws = ws
+    end
 
-EM.run do
-  ws = Faye::WebSocket::Client.new ARGV[0]
-  stdio = EM.attach $stdin, Stdio, ws
-  stdio.buf = []
+    def receive_data data
+      @ws.queue data.unpack 'C*'
+    end
 
-  ws.on :open do |event|
-    stdio.buf.each{|data| ws.ws_send data}
-    stdio.buf=nil
-  end
-
-  ws.on :message do |event|
-    print event.data.pack 'C*'
+    def unbind
+      @ws.bye
+    end
   end
 
-  ws.on :close do
-    EM.stop_event_loop
+  def self.listen!
+    EM.attach $stdin, Stdio, Ws.new(@uri)
   end
+
+  def self.loop!
+    self::Need.each{|f| require f}
+    EM.run{ listen! }
+  end
+
+  def self.go!
+    getopt
+    STDOUT.sync=true
+    loop!
+  end
+
+  go!
+
 end
