@@ -4,6 +4,30 @@ Ruby version of ssh thru websocket proxying.
 
 [Original version](https://github.com/ukoloff/wssh) uses Node.js
 
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+  gem 'em-wssh' if Gem.win_platform?
+```
+
+And then execute:
+
+```sh
+  $ bundle
+```
+
+Or install it yourself as:
+
+```sh
+  $ gem install em-wssh
+```
+
+## Usage
+
+...
+
 ## Data flow
 
 Normal SSH session is very simple:

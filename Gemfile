@@ -1,4 +1,4 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem "em-websocket", group: :server
-gem "faye-websocket", group: :client
+# Specify your gem's dependencies in em-wssh.gemspec
+gemspec
