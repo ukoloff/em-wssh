@@ -26,8 +26,6 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
   end
 
   def self.getopt
-    require 'getoptlong'
-
     opts = GetoptLong.new(
       ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
       ['-d', '--daemon', GetoptLong::NO_ARGUMENT],

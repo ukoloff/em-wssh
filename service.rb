@@ -44,6 +44,7 @@ module Service
   end
 
   def go!
+    require 'getoptlong'
     getopt
     daemonize?
     log "Listening on #{options[:host]}:#{options[:port]}"
