@@ -2,6 +2,8 @@ module Connect
   require_relative 'service'
   extend Service
 
+  Need=%w(faye/websocket)
+
   @options={
     host: 'localhost',
     port: 3122,
@@ -183,11 +185,6 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
 
   def self.listen!
     EM.start_server options[:host], options[:port], Http
-  end
-
-  def self.loop
-    require 'faye/websocket'
-    EM.run{ listen! }
   end
 
   go!

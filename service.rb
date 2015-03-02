@@ -43,13 +43,18 @@ module Service
     end
   end
 
+  def loop!
+    self::Need.each{|f| require f}
+    EM.run{ listen! }
+  end
+
   def go!
     require 'getoptlong'
     getopt
     daemonize?
     log "Listening on #{options[:host]}:#{options[:port]}"
     pid
-    loop
+    loop!
   end
 
 end

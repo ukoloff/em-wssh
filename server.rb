@@ -2,6 +2,8 @@ module Server
   require_relative 'service'
   extend Service
 
+  Need=%w(yaml em-websocket)
+
   @options={
     host: 'localhost',
     port: 4567,
@@ -174,12 +176,6 @@ EOF
     EM::WebSocket.run host: options[:host], port: options[:port] do |ws|
       Req.new ws
     end
-  end
-
-  def self.loop
-    require 'yaml'
-    require 'em-websocket'
-    EM.run{ listen! }
   end
 
   go!
