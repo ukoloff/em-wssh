@@ -1,4 +1,7 @@
 module Server
+  require_relative 'service'
+  extend Service
+
   @options={
     host: 'localhost',
     port: 4567,
@@ -8,15 +11,6 @@ module Server
     log: 'log/wsshd.log',
     pid: 'tmp/pids/wsshd.pid',
   }
-
-  def self.options
-    @options
-  end
-
-  def self.log *msg
-    msg.unshift "[#{Time.now}]"
-    puts msg*' '
-  end
 
   def self.help
     puts <<-EOF
@@ -55,43 +49,6 @@ EOF
       help
     end
     help unless ARGV.empty?
-  end
-
-  def self.path(sym)
-    File.join options[:root], options[sym]
-  end
-
-  def self.mkdir(sym)
-    require 'fileutils'
-    FileUtils.mkdir_p File.dirname file=(path sym)
-    file
-  end
-
-  def self.daemonize!
-    throw 'Cannot daemonize on Windows!' if Gem.win_platform?
-
-    log "Going on in background..."
-
-    f = File.open mkdir(:log), 'a'
-    f.sync=true
-
-    STDIN.reopen '/dev/null'
-    STDOUT.reopen f
-    STDERR.reopen f
-
-    Process.daemon true, true
-  end
-
-  def self.daemonize?
-    daemonize! if options[:daemon]
-  end
-
-  def self.pid
-    File.write p=mkdir(:pid), $$
-    at_exit do
-      log "Exiting..."
-      File.unlink p
-    end
   end
 
   module Ssh
@@ -225,14 +182,6 @@ EOF
     require 'yaml'
     require 'em-websocket'
     EM.run{ listen! }
-  end
-
-  def self.go!
-    getopt
-    daemonize?
-    log "Listening on #{options[:host]}:#{options[:port]}"
-    pid
-    loop
   end
 
   go!

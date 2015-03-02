@@ -1,4 +1,7 @@
 module Connect
+  require_relative 'service'
+  extend Service
+
   @options={
     host: 'localhost',
     port: 3122,
@@ -7,15 +10,6 @@ module Connect
     log: 'log/connect.log',
     pid: 'tmp/pids/connect.pid',
   }
-
-  def self.options
-    @options
-  end
-
-  def self.log *msg
-    msg.unshift "[#{Time.now}]"
-    puts msg*' '
-  end
 
   def self.help
     puts <<-EOF
@@ -54,51 +48,6 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
       help
     end
     help if ARGV.length!=1
-  end
-
-  def self.path(sym)
-    File.join options[:root], options[sym]
-  end
-
-  def self.mkdir(sym)
-    require 'fileutils'
-    FileUtils.mkdir_p File.dirname file=(path sym)
-    file
-  end
-
-  def self.daemonize!
-    throw 'Cannot daemonize on Windows!' if Gem.win_platform?
-
-    log "Going on in background..."
-
-    f = File.open mkdir(:log), 'a'
-    f.sync=true
-
-    STDIN.reopen '/dev/null'
-    STDOUT.reopen f
-    STDERR.reopen f
-
-    Process.daemon true, true
-  end
-
-  def self.daemonize?
-    daemonize! if options[:daemon]
-  end
-
-  def self.pid
-    File.write p=mkdir(:pid), $$
-    at_exit do
-      log "Exiting..."
-      File.unlink p
-    end
-  end
-
-  def self.go!
-    getopt
-    daemonize?
-    log "Listening on #{options[:host]}:#{options[:port]}"
-    pid
-    loop
   end
 
   class Dst
