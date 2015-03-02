@@ -5,7 +5,7 @@ require 'em/wssh'
 
 Gem::Specification.new do |spec|
   spec.name          = "em-wssh"
-  spec.version       = Em::Wssh::VERSION
+  spec.version       = EM::Wssh::VERSION
   spec.authors       = ["Stas Ukolov"]
   spec.email         = ["ukoloff@gmail.com"]
   spec.description   = 'Proxy SSH connection through Websocket (nginx)'
