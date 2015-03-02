@@ -46,6 +46,7 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
       help
     end
     help if ARGV.length!=1
+    options[:uri] = ARGV[0]
   end
 
   class Dst
@@ -72,7 +73,7 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
     end
 
     def connect! host
-      log "Redirect to", uri="#{ARGV[0]}/#{host}"
+      log "Redirect to", uri="#{Connect.options[:uri]}/#{host}"
 
       http.onbody
 

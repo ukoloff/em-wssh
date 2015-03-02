@@ -39,10 +39,11 @@ In some scenarios this path can be even longer:
 
 ## Windows bugs
 
-Windows installation of EventMachine has two bugs:
+Windows installation of EventMachine has a few bugs:
 
   1. Using STDIN blocks all other connections
   2. By default SSL/TLS is not available
+  3. No root certificates available ([Fixed](https://github.com/ukoloff/openssl-win-root))
 
 So, this package is in fact almost unusable on MS Windows.
 
