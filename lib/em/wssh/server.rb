@@ -151,8 +151,5 @@ EOF
       Req.new ws
     end
   end
-
-  go!
-
 end
 end

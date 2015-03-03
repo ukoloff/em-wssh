@@ -88,7 +88,4 @@ Usage: ruby #{File.basename __FILE__} ws[s]://host[:port]/uri
     STDOUT.sync=true
     loop!
   end
-
-  go!
-
 end

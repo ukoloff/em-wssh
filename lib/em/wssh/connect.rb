@@ -160,8 +160,5 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
   def self.listen!
     EM.start_server options[:host], options[:port], Http
   end
-
-  go!
-
 end
 end
