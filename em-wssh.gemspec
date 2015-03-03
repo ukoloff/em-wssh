@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["ukoloff@gmail.com"]
   spec.description   = 'Proxy SSH connection through Websocket (nginx)'
   spec.summary       = ''
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/ukoloff/em-wssh"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
