@@ -12,7 +12,7 @@ module Exe
       help
     end
     m=Module.nesting[1].const_get cmd.sub(/^./){|s|s.upcase}
-    help unless m.respond_to? :go!
+    help unless Module===m and m.respond_to? :go!
     m.go!
   end
 

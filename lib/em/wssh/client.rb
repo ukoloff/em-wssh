@@ -1,3 +1,5 @@
+require_relative '../wssh'
+
 module EventMachine::Wssh
 module Client
   Need=%w(faye/websocket)
