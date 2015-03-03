@@ -19,13 +19,8 @@ module Server
 Proxy ssh connection through websocket
 
 Usage: ruby #{File.basename __FILE__} [options...]
-
-  -l --listen=port Listen to port
-  -a --all         Listen to all interfaces
-  -d --daemon      Run daemonized
-  -h --help        Show this help
 EOF
-    exit 1
+    helptions
   end
 
   module Ssh

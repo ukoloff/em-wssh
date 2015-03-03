@@ -6,6 +6,18 @@ module Service
     puts msg*' '
   end
 
+  def helptions
+    puts <<-EOF
+
+  -l --listen=port Listen to port
+  -a --all         Listen to all interfaces
+  -d --daemon      Run daemonized
+  -h --help        Show this help
+EOF
+    exit 1
+  end
+
+
   def getopt
     require 'getoptlong'
     opts = GetoptLong.new(

@@ -19,13 +19,8 @@ module Connect
 Simple HTTP CONNECT proxy to WSSH daemon
 
 Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
-
-  -l --listen=port Listen to port
-  -a --all         Listen to all interfaces
-  -d --daemon      Run daemonized
-  -h --help        Show this help
     EOF
-    exit 1
+    helptions
   end
 
   class Dst
