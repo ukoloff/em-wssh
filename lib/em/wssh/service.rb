@@ -13,6 +13,7 @@ module Service
     puts <<-EOF
 
   -a --all         Listen to all interfaces
+  -b --base=dir    Set home directory
   -d --daemon      Run daemonized
   -h --help        Show this help
   -l --listen=port Listen to port
@@ -25,6 +26,7 @@ EOF
     require 'getoptlong'
     opts = GetoptLong.new(
       ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
+      ['-b', '--base', GetoptLong::REQUIRED_ARGUMENT],
       ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
       ['-a', '--all', GetoptLong::NO_ARGUMENT],
       ['-v', '--version', GetoptLong::NO_ARGUMENT],
@@ -36,6 +38,8 @@ EOF
           options[:daemon]=true
         when '-l'
           options[:port]=arg
+        when '-b'
+          options[:base]=File.expand_path arg
         when '-a'
           options[:host]='0.0.0.0'
         when '-v'
@@ -52,8 +56,14 @@ EOF
     args.each{|arg| options[arg]=ARGV.shift}
   end
 
+  def homebase
+    x = File.expand_path '..', __FILE__
+    x = File.dirname x until File.exists? File.join x, 'Gemfile'
+    x
+  end
+
   def path(sym)
-    File.join options[:root], options[sym]
+    File.join options[:base]||=homebase, options[sym]
   end
 
   def mkdir(sym)

@@ -11,7 +11,6 @@ module Connect
     port: 3122,
     daemon: false,
     args: :uri,
-    root: File.dirname(__FILE__),
     log: 'log/connect.log',
     pid: 'tmp/pids/connect.pid',
   }

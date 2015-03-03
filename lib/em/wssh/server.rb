@@ -10,7 +10,6 @@ module Server
     host: 'localhost',
     port: 4567,
     daemon: false,
-    root: File.dirname(__FILE__),
     hosts: 'hosts.yml',
     log: 'log/wsshd.log',
     pid: 'tmp/pids/wsshd.pid',
