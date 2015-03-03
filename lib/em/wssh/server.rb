@@ -1,5 +1,7 @@
+require_relative 'service'
+
+module EventMachine::Wssh
 module Server
-  require_relative 'service'
   extend Service
 
   Need=%w(yaml em-websocket)
@@ -152,4 +154,5 @@ EOF
 
   go!
 
+end
 end

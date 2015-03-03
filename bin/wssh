@@ -1,2 +1,2 @@
 require_relative '../lib/em/wssh/exe'
-Exe.do!
+EventMachine::Wssh::Exe.do!

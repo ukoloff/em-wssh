@@ -1,3 +1,6 @@
+require_relative '../wssh'
+
+module EventMachine::Wssh
 module Service
   attr_reader :options
 
@@ -9,14 +12,14 @@ module Service
   def helptions
     puts <<-EOF
 
-  -l --listen=port Listen to port
   -a --all         Listen to all interfaces
   -d --daemon      Run daemonized
   -h --help        Show this help
+  -l --listen=port Listen to port
+  -v --version     Show version
 EOF
     exit 1
   end
-
 
   def getopt
     require 'getoptlong'
@@ -24,6 +27,7 @@ EOF
       ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
       ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
       ['-a', '--all', GetoptLong::NO_ARGUMENT],
+      ['-v', '--version', GetoptLong::NO_ARGUMENT],
     )
     begin
       opts.each do |opt, arg|
@@ -34,6 +38,9 @@ EOF
           options[:port]=arg
         when '-a'
           options[:host]='0.0.0.0'
+        when '-v'
+          puts VERSION
+          exit 1
         end
       end
     rescue
@@ -95,4 +102,5 @@ EOF
     loop!
   end
 
+end
 end

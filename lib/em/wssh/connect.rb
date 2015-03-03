@@ -1,5 +1,7 @@
+require_relative 'service'
+
+module EventMachine::Wssh
 module Connect
-  require_relative 'service'
   extend Service
 
   Need=%w(faye/websocket)
@@ -161,4 +163,5 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
 
   go!
 
+end
 end
