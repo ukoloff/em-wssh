@@ -1,5 +1,7 @@
 # em-wssh
 
+[![Gem Version](https://badge.fury.io/rb/em-wssh.svg)](http://badge.fury.io/rb/em-wssh)
+
 Ruby version of ssh thru websocket proxying.
 
 [Original version](https://github.com/ukoloff/wssh) uses Node.js
