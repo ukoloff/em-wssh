@@ -1,3 +1,4 @@
+module EventMachine::Wssh
 module Client
   Need=%w(faye/websocket)
 
@@ -88,4 +89,5 @@ Usage: ruby #{File.basename __FILE__} ws[s]://host[:port]/uri
     STDOUT.sync=true
     loop!
   end
+end
 end
