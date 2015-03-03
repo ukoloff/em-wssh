@@ -68,6 +68,9 @@ EOF
 
       @count=self.class.count
 
+      port, ip=Socket.unpack_sockaddr_in ws.get_peername
+      log "Connect from", ip
+
       ws.onopen{|handshake| onopen handshake}
       ws.onbinary{|msg| ondata msg}
       ws.onclose{|code, body| onclose}
@@ -79,6 +82,8 @@ EOF
     end
 
     def onopen handshake
+      xf=handshake.headers_downcased['x-forwarded-for']
+      log "Forwarded for", xf if xf
       log "Request", handshake.path
       unless host = resolve(handshake.path) rescue nil
         log "Invalid host"
