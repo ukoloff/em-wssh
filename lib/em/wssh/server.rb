@@ -28,29 +28,6 @@ EOF
     exit 1
   end
 
-  def self.getopt
-    opts = GetoptLong.new(
-      ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
-      ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
-      ['-a', '--all', GetoptLong::NO_ARGUMENT],
-    )
-    begin
-      opts.each do |opt, arg|
-        case opt
-        when '-d'
-          options[:daemon]=true
-        when '-l'
-          options[:port]=arg
-        when '-a'
-          options[:host]='0.0.0.0'
-        end
-      end
-    rescue
-      help
-    end
-    help unless ARGV.empty?
-  end
-
   module Ssh
     attr_accessor :req
 

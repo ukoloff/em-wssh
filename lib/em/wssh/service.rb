@@ -6,6 +6,33 @@ module Service
     puts msg*' '
   end
 
+  def getopt
+    require 'getoptlong'
+    opts = GetoptLong.new(
+      ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
+      ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
+      ['-a', '--all', GetoptLong::NO_ARGUMENT],
+    )
+    begin
+      opts.each do |opt, arg|
+        case opt
+        when '-d'
+          options[:daemon]=true
+        when '-l'
+          options[:port]=arg
+        when '-a'
+          options[:host]='0.0.0.0'
+        end
+      end
+    rescue
+      help
+    end
+    args=options[:args]
+    args=args.nil? ? [] : [args] unless Array===args
+    help if args.length!=ARGV.length
+    args.each{|arg| options[arg]=ARGV.shift}
+  end
+
   def path(sym)
     File.join options[:root], options[sym]
   end
@@ -49,7 +76,6 @@ module Service
   end
 
   def go!
-    require 'getoptlong'
     getopt
     daemonize?
     log "Listening on #{options[:host]}:#{options[:port]}"

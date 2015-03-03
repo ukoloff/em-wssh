@@ -8,6 +8,7 @@ module Connect
     host: 'localhost',
     port: 3122,
     daemon: false,
+    args: :uri,
     root: File.dirname(__FILE__),
     log: 'log/connect.log',
     pid: 'tmp/pids/connect.pid',
@@ -25,30 +26,6 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
   -h --help        Show this help
     EOF
     exit 1
-  end
-
-  def self.getopt
-    opts = GetoptLong.new(
-      ['-l', '--listen', GetoptLong::REQUIRED_ARGUMENT],
-      ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
-      ['-a', '--all', GetoptLong::NO_ARGUMENT],
-    )
-    begin
-      opts.each do |opt, arg|
-        case opt
-        when '-d'
-          options[:daemon]=true
-        when '-l'
-          options[:port]=arg
-        when '-a'
-          options[:host]='0.0.0.0'
-        end
-      end
-    rescue
-      help
-    end
-    help if ARGV.length!=1
-    options[:uri] = ARGV[0]
   end
 
   class Dst
