@@ -68,8 +68,7 @@ EOF
 
       @count=self.class.count
 
-      port, ip=Socket.unpack_sockaddr_in ws.get_peername
-      log "Connect from", ip
+      log "Connect from", Socket.unpack_sockaddr_in(ws.get_peername)[1]
 
       ws.onopen{|handshake| onopen handshake}
       ws.onbinary{|msg| ondata msg}

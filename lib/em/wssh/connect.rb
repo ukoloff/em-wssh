@@ -157,7 +157,8 @@ Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
   end
 
   def self.listen!
-    EM.start_server options[:host], options[:port], Http
+    conn=EM.start_server options[:host], options[:port], Http
+    options[:onport].call Socket.unpack_sockaddr_in(EM.get_sockname conn)[0] if options[:onport]
   end
 end
 end
