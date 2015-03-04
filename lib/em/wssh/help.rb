@@ -34,5 +34,13 @@ Available commands:
       puts mod::Title
     end
   end
+
+  def self.help
+    puts <<-EOT
+Shows help for WSSH suite or individual commands
+
+Usage: wssh help [command]
+    EOT
+  end
 end
 end
