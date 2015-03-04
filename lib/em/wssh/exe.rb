@@ -2,18 +2,35 @@ require_relative '../wssh'
 
 module EventMachine::Wssh
 module Exe
-  def self.do!
-    cmd = ARGV.shift
-    help unless /\A\w+\Z/.match cmd
+  def self.command? cmd
+    return unless /\A\w+\Z/.match cmd
     cmd=cmd.downcase
     begin
       require_relative cmd
     rescue LoadError
-      help
+      return
     end
-    m=Module.nesting[1].const_get cmd.sub(/^./){|s|s.upcase}
-    help unless Module===m and m.respond_to? :go!
-    m.go!
+    m=Module.nesting[1].const_get cmd.sub(/^./){|s|s.upcase} rescue nil
+    return unless Module===m and m.respond_to? :go!
+    m
+  end
+
+  def self.commands
+    m=Module.nesting[1]
+    Hash[
+      m.constants
+      .map{|n|m.const_get n}
+      .grep(Module)
+      .select{|m| m.respond_to? :go!}
+      .map{|m| [m.name.split(/\W+/).last.downcase, m]}
+      .sort_by{|x| x[0]}
+    ]
+  end
+
+  def self.do!
+    mod = command? ARGV.shift
+    help unless mod
+    mod.go!
   end
 
   def self.help
