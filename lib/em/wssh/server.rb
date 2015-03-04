@@ -4,6 +4,8 @@ module EventMachine::Wssh
 module Server
   extend Service
 
+  Title='WSSH daemon redirects Websocket to sshd'
+
   Need=%w(yaml em-websocket)
 
   @options={

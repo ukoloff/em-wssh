@@ -2,6 +2,9 @@ require_relative '../wssh'
 
 module EventMachine::Wssh
 module Client
+
+  Title='Connect to WSSH server'
+
   Need=%w(faye/websocket)
 
   def self.help

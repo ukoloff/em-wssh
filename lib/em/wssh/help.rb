@@ -3,6 +3,8 @@ require_relative 'all'
 module EventMachine::Wssh
 module Help
 
+  Title='Show this help'
+
   def self.go!
     puts <<-EOT
 WSSH suite v#{VERSION}

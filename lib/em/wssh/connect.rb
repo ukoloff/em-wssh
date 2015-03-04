@@ -4,6 +4,8 @@ module EventMachine::Wssh
 module Connect
   extend Service
 
+  Title='HTTP Connect proxy to WSSH server'
+
   Need=%w(faye/websocket)
 
   @options={
