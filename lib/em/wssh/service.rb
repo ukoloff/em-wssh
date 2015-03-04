@@ -6,7 +6,7 @@ module Service
 
   def log *msg
     msg.unshift "[#{Time.now}]"
-    puts msg*' '
+    (options[:logger]||=STDOUT).puts msg*' '
   end
 
   def helptions
