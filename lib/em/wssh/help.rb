@@ -5,11 +5,14 @@ module Help
 
   def self.go!
     puts <<-EOT
-WSSH v#{VERSION}
+WSSH suite v#{VERSION}
+
+Usage: wssh command [parameters...]
 
 Available commands:
+
     EOT
-    Exe.commands.each{|cmd, mod| puts "  #{cmd}  -"}
+    Exe.commands.each{|cmd, mod| puts "  wssh #{cmd}\t#{mod::Title rescue nil}"}
   end
 end
 end
