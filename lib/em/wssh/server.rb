@@ -18,10 +18,11 @@ module Server
   }
 
   def self.help
+    require_relative 'exe'
     puts <<-EOF
 Proxy ssh connection through websocket
 
-Usage: ruby #{File.basename __FILE__} [options...]
+Usage: #{Exe.biname} [options...]
 EOF
     helptions
   end

@@ -39,7 +39,7 @@ Available commands:
     puts <<-EOT
 Shows help for WSSH suite or individual commands
 
-Usage: wssh help [command]
+Usage: #{Exe.biname} [command]
     EOT
   end
 end

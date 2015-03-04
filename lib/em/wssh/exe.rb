@@ -38,5 +38,9 @@ module Exe
     Help.go!
     exit
   end
+
+  def self.biname
+    "wssh "+File.basename(caller_locations.first.path).sub(/[.][^.]*\Z/, '')
+  end
 end
 end

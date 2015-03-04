@@ -8,10 +8,11 @@ module Client
   Need=%w(faye/websocket)
 
   def self.help
+    require_relative 'exe'
     puts <<-EOT
 WSSH client
 
-Usage: ruby #{File.basename __FILE__} ws[s]://host[:port]/uri
+Usage: #{Exe.biname} ws[s]://host[:port]/uri
     EOT
     exit 1
   end

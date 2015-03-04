@@ -18,10 +18,11 @@ module Connect
   }
 
   def self.help
+    require_relative 'exe'
     puts <<-EOF
 Simple HTTP CONNECT proxy to WSSH daemon
 
-Usage: ruby #{File.basename __FILE__} [options...] ws[s]://host[:port]/uri
+Usage: #{Exe.biname} [options...] ws[s]://host[:port]/uri
     EOF
     helptions
   end
