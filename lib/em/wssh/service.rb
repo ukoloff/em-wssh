@@ -6,7 +6,7 @@ module Service
 
   def log *msg
     msg.unshift "[#{Time.now}]"
-    (options[:logger]||=STDOUT).puts msg*' '
+    puts msg*' '
   end
 
   def helptions
@@ -78,7 +78,6 @@ EOF
     log "Going on in background..."
 
     f = File.open mkdir(:log), 'a'
-    f.sync=true
 
     STDIN.reopen '/dev/null'
     STDOUT.reopen f
@@ -101,6 +100,7 @@ EOF
 
   def loop!
     self::Need.each{|f| require f}
+    STDOUT.sync=true
     EM.run{ listen! }
   end
 

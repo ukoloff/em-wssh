@@ -161,7 +161,7 @@ Usage: #{Exe.biname} [options...] ws[s]://host[:port]/uri
 
   def self.listen!
     conn=EM.start_server options[:host], options[:port], Http
-    options[:onport].call Socket.unpack_sockaddr_in(EM.get_sockname conn)[0] if options[:onport]
+    options[:onlisten].call Socket.unpack_sockaddr_in(EM.get_sockname conn)[0] if options[:onlisten]
   end
 end
 end

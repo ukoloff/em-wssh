@@ -107,7 +107,7 @@ s.loop!
 
 Some options are not accesible to `wssh` command and can be used only programmaticaly.
 
-Eg, EventMachine::Wssh::Connect has option `onport` that allows listening to random port:
+Eg, EventMachine::Wssh::Connect has option `onlisten` that allows listening to random port:
 
 ```ruby
 #!/usr/bin/env ruby
@@ -121,7 +121,7 @@ c=EventMachine::Wssh::Connect
 c.options.merge!(
   port: 0,
   uri: 'wss://server.host.com/ssh',
-  onport: Proc.new{|port| q.push port},
+  onlisten: Proc.new{|port| q.push port},
 )
 
 Thread.new{c.loop!}
@@ -178,7 +178,7 @@ Windows installation of EventMachine has a few bugs:
 So, this package is in fact almost unusable on MS Windows.
 
 The only exception: if you connect to Non-TLS WSSH server
-(ws: or http:, not wss: or https:), you **can** start connect.rb
+(ws: or http:, not wss: or https:), you **can** start `wssh connect`
 and then use SSH client, capable to connect via HTTP proxy.
 
 To connect to TLS WSSH server, you should use Node.js version.
