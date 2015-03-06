@@ -11,19 +11,19 @@ Ruby version of ssh thru websocket proxying.
 Add this line to your application's Gemfile:
 
 ```ruby
-  gem 'em-wssh' if Gem.win_platform?
+gem 'em-wssh' if Gem.win_platform?
 ```
 
 And then execute:
 
 ```sh
-  $ bundle
+$ bundle
 ```
 
 Or install it yourself as:
 
 ```sh
-  $ gem install em-wssh
+$ gem install em-wssh
 ```
 
 ## Usage
@@ -47,11 +47,14 @@ Client is started with `wssh client URI`, eg `wssh client ws://localhost:4567`.
 Running client from terminal is not very useful. It should be called by ssh client:
 
 ```sh
-   ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' sshd.local
+ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' sshd.local
 ```
 
+By default WSSH server has 60 seconds timeout. To prevent idle connection to drop,
+one can use `ServerAliveInterval` parameter:
+
 ```sh
-   ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' -o ServerAliveInterval=50 sshd.local
+ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' -o ServerAliveInterval=50 sshd.local
 ```
 
 ### WSSH Proxy
@@ -69,13 +72,42 @@ require 'net/ssh'
 require 'net/ssh/proxy/http'
 
 x=Net::SSH.start 'sshd.local', 'root',
-  proxy: Net::SSH::Proxy::HTTP.new 'localhost', 3122
+  proxy: Net::SSH::Proxy::HTTP.new('localhost', 3122)
 
 puts x.exec! 'hostname'
 ```
 
 ## API
 
+WSSH server, client or proxy can be start programmaticaly:
+
+```ruby
+require 'em/wssh/server'
+
+s=EventMachine::Wssh::Server
+s.options.merge! base: '.'
+s.loop!
+```
+
+```ruby
+require 'em/wssh/client'
+
+s=EventMachine::Wssh::Client
+s.options[:uri]='wss://server.host.com/ssh/sshd.local'
+s.loop!
+```
+
+```ruby
+require 'em/wssh/connect'
+
+s=EventMachine::Wssh::Connect
+s.options.merge! base: '.', all: true, uri: 'wss://server.host.com/ssh/sshd.local'
+s.loop!
+```
+
+Some options are not accesible to `wssh` command and can be used only programmaticaly.
+
+Eg, EventMachine::Wssh::Connect has option `onport` that allows listening to random port:
 
 ```ruby
 #!/usr/bin/env ruby
@@ -97,7 +129,7 @@ Thread.new{c.loop!}
 puts "Port=#{port=q.pop}"
 
 x=Net::SSH.start 'sshd.local', 'root',
-  proxy: Net::SSH::Proxy::HTTP.new 'localhost', port
+  proxy: Net::SSH::Proxy::HTTP.new('localhost', port)
 
 puts x.exec! 'hostname'
 ```
