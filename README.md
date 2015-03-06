@@ -11,7 +11,7 @@ Ruby version of ssh thru websocket proxying.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'em-wssh' if Gem.win_platform?
+gem 'em-wssh'
 ```
 
 And then execute:
@@ -92,17 +92,17 @@ s.loop!
 ```ruby
 require 'em/wssh/client'
 
-s=EventMachine::Wssh::Client
-s.options[:uri]='wss://server.host.com/ssh/sshd.local'
-s.loop!
+c=EventMachine::Wssh::Client
+c.options[:uri]='wss://server.host.com/ssh/sshd.local'
+c.loop!
 ```
 
 ```ruby
 require 'em/wssh/connect'
 
-s=EventMachine::Wssh::Connect
-s.options.merge! base: '.', all: true, uri: 'wss://server.host.com/ssh/sshd.local'
-s.loop!
+p=EventMachine::Wssh::Connect
+p.options.merge! base: '.', all: true, uri: 'wss://server.host.com/ssh/sshd.local'
+p.loop!
 ```
 
 Some options are not accesible to `wssh` command and can be used only programmaticaly.
