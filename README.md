@@ -28,7 +28,79 @@ Or install it yourself as:
 
 ## Usage
 
-...
+Single command `wssh` is exported. Sometimes it should be `bundle exec wssh`.
+
+### WSSH Server
+
+To run WSSH server say `wssh server`.
+
+### nginx
+
+Directly exposing WSSH server to Internet is not a good idea.
+One should better install nginx (with TLS) and [force it to redirect](nginx/ssh)
+WSSH connections to WSSH server.
+
+### WSSH Client
+
+Client is started with `wssh client URI`, eg `wssh client ws://localhost:4567`.
+
+Running client from terminal is not very useful. It should be called by ssh client:
+
+```sh
+   ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' sshd.local
+```
+
+```sh
+   ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' -o ServerAliveInterval=50 sshd.local
+```
+
+### WSSH Proxy
+
+WSSH client is in fact unusable on Windows.
+It can be impractical when we create a lot of SSH connections (eg with Capistrano mass deploy).
+
+In these cases run `wssh connect URI`, it will listen to TCP port (3122 by default) and will work
+as normal HTTP proxy, so proxy-capable clients (PuTTY/Plink and Net::SSH) can use it to connect to SSH servers.
+
+```ruby
+#!/usr/bin/env ruby
+
+require 'net/ssh'
+require 'net/ssh/proxy/http'
+
+x=Net::SSH.start 'sshd.local', 'root',
+  proxy: Net::SSH::Proxy::HTTP.new 'localhost', 3122
+
+puts x.exec! 'hostname'
+```
+
+## API
+
+
+```ruby
+#!/usr/bin/env ruby
+
+require 'net/ssh'
+require 'net/ssh/proxy/http'
+require 'em/wssh/connect'
+
+q=Queue.new
+c=EventMachine::Wssh::Connect
+c.options.merge!(
+  port: 0,
+  uri: 'wss://server.host.com/ssh',
+  onport: Proc.new{|port| q.push port},
+)
+
+Thread.new{c.loop!}
+
+puts "Port=#{port=q.pop}"
+
+x=Net::SSH.start 'sshd.local', 'root',
+  proxy: Net::SSH::Proxy::HTTP.new 'localhost', port
+
+puts x.exec! 'hostname'
+```
 
 ## Data flow
 
@@ -40,8 +112,8 @@ Normal SSH session is very simple:
 
 WSSH session is:
 
-  * SSH Client with -o ProxyCommand='ruby client.rb WSSH-URI'
-  * client.rb listening to its stdin
+  * SSH Client with -o ProxyCommand='wssh client WSSH-URI'
+  * WSSH client listening to its stdin
   * Websocket (HTTP/HTTPS) connection to nginx
   * nginx [configured](nginx/ssh) to redirect connection to WSSH server
   * Another Websocket connection from nginx to WSSH server
@@ -53,9 +125,9 @@ And nginx stage can be omited in development/testing scenarios.
 
 In some scenarios this path can be even longer:
 
-  * SSH Client, capable to connect via HTTP proxy (eg PuTTY/PLink)
+  * SSH Client, capable to connect via HTTP proxy (eg PuTTY/PLink or Net::SSH)
   * TCP connection to local proxy
-  * connect.rb listening to dedicated port (3122 by default)
+  * `wssh connect` listening to dedicated port (3122 by default)
   * Websocket (HTTP/HTTPS) connection to nginx
   * nginx [configured](nginx/ssh) to redirect connection to WSSH server
   * Another Websocket connection from nginx to WSSH server
