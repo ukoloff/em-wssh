@@ -6,7 +6,7 @@ module Ephemeral
 
   @options={
     base: '.',
-    proxy: 'log/ephemeral.log',
+    log: 'log/ephemeral.log',
     tls: 'log/tls.log',
   }
 
@@ -28,6 +28,13 @@ module Ephemeral
   end
 
   def self.allocate uri
+    a = Accept.new
+
+    puts "Running WSSH proxy..."
+    spawn *%w(bundle exec wssh ephemeral), a.myport.to_s, uri,
+      %i(out err)=>File.open(mkdir(:log), 'a')
+
+    a.port
   end
 
   def self.help
@@ -48,12 +55,32 @@ For internal use.
 
     Connect.options.merge!(
       port: 0,
+      uri: ARGV[1],
       onlisten: Proc.new{|port| onlisten port}
     )
     Connect.loop!
   end
 
+  module Parent
+    def initialize port
+      @port=port
+      @c=EM::Wssh::Connect
+      @c.log "Listening to port", port
+    end
+
+    def post_init
+      @c.log "Connected to parent"
+      send_data "#{@port}\n"
+    end
+
+    def unbind
+      @c.log "Parent disconnected"
+      EM.stop_event_loop
+    end
+  end
+
   def onlisten port
+    EM.connect 'localhost', ARGV[0], Parent, port
   end
 
 end
