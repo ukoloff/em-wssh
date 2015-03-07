@@ -44,6 +44,16 @@ For internal use.
 
   def self.go!
     help if 2!=ARGV.length
+    require_relative 'connect'
+
+    Connect.options.merge!(
+      port: 0,
+      onlisten: Proc.new{|port| onlisten port}
+    )
+    Connect.loop!
+  end
+
+  def onlisten port
   end
 
 end
