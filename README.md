@@ -160,7 +160,7 @@ class SSHKit::Host
   end
 end
 ```
-Use this task: `cap stage **wssh** task(s)...` to tunnel all Capistrano ssh traffic thru
+Use this task `cap stage wssh task(s)...` to tunnel all Capistrano ssh traffic through
 WSSH server.
 
 ## Data flow
