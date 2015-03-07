@@ -107,7 +107,7 @@ p.loop!
 
 Some options are not accesible to `wssh` command and can be used only programmaticaly.
 
-Eg, EventMachine::Wssh::Connect has option `onlisten` that allows listening to random port:
+Eg, EventMachine::Wssh::Connect has option `onlisten` that allows listening to ephemeral port:
 
 ```ruby
 #!/usr/bin/env ruby

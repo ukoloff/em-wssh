@@ -22,6 +22,7 @@ module Exe
       .map{|n|m.const_get n}
       .grep(Module)
       .select{|m| m.respond_to? :go!}
+      .select{|m| m.const_defined? :Title}
       .map{|m| [m.name.split(/\W+/).last.downcase, m]}
       .sort_by{|x| x[0]}
     ]

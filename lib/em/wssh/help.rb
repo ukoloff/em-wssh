@@ -24,7 +24,7 @@ Usage: wssh command [parameters...]
 Available commands:
 
     EOT
-    Exe.commands.each{|cmd, mod| puts "  wssh #{cmd}\t#{mod::Title rescue nil}"}
+    Exe.commands.each{|cmd, mod| puts "  wssh #{cmd}\t#{mod::Title}"}
   end
 
   def self.command mod
