@@ -105,7 +105,11 @@ p.options.merge! base: '.', all: true, uri: 'wss://server.host.com/ssh/sshd.loca
 p.loop!
 ```
 
+Use `go!` method instead `loop!` to mimic cli behavour (command line parsing).
+
 Some options are not accesible to `wssh` command and can be used only programmaticaly.
+
+### Ephemeral module
 
 Eg, EventMachine::Wssh::Connect has option `onlisten` that allows listening to ephemeral port:
 
@@ -133,6 +137,31 @@ x=Net::SSH.start 'sshd.local', 'root',
 
 puts x.exec! 'hostname'
 ```
+
+Unfortunately, EventMachine fails to run in thread inside Capistrano.
+But Connect proxy still can run in separate process.
+To do this, module Ephemeral was forged:
+
+```ruby
+task :wssh do
+  require 'net/ssh/proxy/http'
+  require 'em/wssh/ephemeral'
+
+  port = EventMachine::Wssh::Ephemeral.allocate 'ws://localhost:4567/test'
+
+  proxy = Net::SSH::Proxy::HTTP.new 'localhost', port
+
+  roles(:all).each{|h| h.wssh_proxy proxy }
+end
+
+class SSHKit::Host
+  def wssh_proxy proxy
+    @ssh_options[:proxy]=proxy
+  end
+end
+```
+Use this task: `cap stage **wssh** task(s)...` to tunnel all Capistrano ssh traffic thru
+WSSH server.
 
 ## Data flow
 
