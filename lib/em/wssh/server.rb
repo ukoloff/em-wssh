@@ -22,7 +22,7 @@ module Server
     puts <<-EOF
 Proxy ssh connection through websocket
 
-Usage: #{Exe.biname} [options...]
+#{Exe.usage} [options...]
 EOF
     helptions
   end

@@ -40,8 +40,8 @@ module Exe
     exit
   end
 
-  def self.biname
-    "wssh "+File.basename(caller_locations.first.path).sub(/[.][^.]*\Z/, '')
+  def self.usage
+    "Usage: wssh "+File.basename(caller_locations.first.path).sub(/[.][^.]*\Z/, '')
   end
 end
 end

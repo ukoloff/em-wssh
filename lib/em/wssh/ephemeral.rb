@@ -35,7 +35,7 @@ module Ephemeral
     puts <<-EOF
 Run HTTP proxy on ephemeral port
 
-Usage: #{Exe.biname} <port> <uri>
+#{Exe.usage} <port> <uri>
 
 For internal use.
     EOF

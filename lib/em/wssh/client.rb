@@ -12,7 +12,7 @@ module Client
     puts <<-EOT
 WSSH client
 
-Usage: #{Exe.biname} ws[s]://host[:port]/uri
+#{Exe.usage} ws[s]://host[:port]/uri
     EOT
     exit 1
   end

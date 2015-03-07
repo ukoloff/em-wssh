@@ -22,7 +22,7 @@ module Connect
     puts <<-EOF
 Simple HTTP CONNECT proxy to WSSH daemon
 
-Usage: #{Exe.biname} [options...] ws[s]://host[:port]/uri
+#{Exe.usage} [options...] ws[s]://host[:port]/uri
     EOF
     helptions
   end
