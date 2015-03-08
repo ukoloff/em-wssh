@@ -34,8 +34,10 @@ class Ephemeral
   end
 
   def tlswrap uri
+    return uri unless options[:tlswrap] and Gem.win_platform?
     require 'uri'
     z = URI uri
+    return uri unless %w(wss https).include? z.scheme
     log "Running TLS Wrapper..."
     spawn 'node', '.', myport.to_s, z.host,
       chdir: __dir__,
