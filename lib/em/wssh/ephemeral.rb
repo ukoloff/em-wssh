@@ -5,7 +5,9 @@ class Ephemeral
   extend Service
 
   @options={
+    tlswrap: true,
     base: '.',
+    pid: 'tmp/pids/ephemeral.pid',
     log: 'log/ephemeral.log',
     tls: 'log/tls.log',
   }
@@ -31,7 +33,13 @@ class Ephemeral
     sock.gets.to_i
   end
 
+  def tlswrap uri
+    uri
+  end
+
   def allocate uri
+    uri = tlswrap uri
+
     puts "Running WSSH proxy..."
     spawn *%w(bundle exec wssh ephemeral), myport.to_s, uri,
       %i(out err)=>File.open(mkdir(:log), 'a')
@@ -59,6 +67,8 @@ For internal use.
     help if 2!=ARGV.length
     require_relative 'connect'
 
+    pid
+
     Connect.options.merge!(
       port: 0,
       uri: ARGV[1],
@@ -71,16 +81,20 @@ For internal use.
     def initialize port
       @port=port
       @c=EM::Wssh::Connect
-      @c.log "Listening to port", port
+      log "Listening to port", port
+    end
+
+    def log *args
+      @c.log *args
     end
 
     def post_init
-      @c.log "Connected to parent"
+      log "Connected to parent"
       send_data "#{@port}\n"
     end
 
     def unbind
-      @c.log "Parent disconnected"
+      log "Parent disconnected"
       EM.stop_event_loop
     end
   end
