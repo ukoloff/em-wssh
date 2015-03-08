@@ -34,13 +34,22 @@ class Ephemeral
   end
 
   def tlswrap uri
-    uri
+    require 'uri'
+    z = URI uri
+    log "Running TLS Wrapper..."
+    spawn 'node', '.', myport.to_s, z.host,
+      chdir: __dir__,
+      %i(out err)=>File.open(mkdir(:tls), 'a')
+    z.scheme='ws'
+    z.host='localhost'
+    z.port=rport
+    z.to_s
   end
 
   def allocate uri
     uri = tlswrap uri
 
-    puts "Running WSSH proxy..."
+    log "Running WSSH proxy..."
     spawn *%w(bundle exec wssh ephemeral), myport.to_s, uri,
       %i(out err)=>File.open(mkdir(:log), 'a')
 
