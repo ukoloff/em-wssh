@@ -1,7 +1,7 @@
 require_relative 'service'
 
 module EventMachine::Wssh
-module Ephemeral
+class Ephemeral
   extend Service
 
   @options={
@@ -10,31 +10,37 @@ module Ephemeral
     tls: 'log/tls.log',
   }
 
-  class Accept
-    def initialize
-      require 'socket'
-      @sock=Addrinfo.tcp('127.0.0.1', 0).listen 1
-    end
-
-    def myport
-      Socket.unpack_sockaddr_in(@sock.getsockname).first
-    end
-
-    def port
-      sock=@sock.accept.first
-      at_exit{sock}
-      sock.gets.to_i
+  %i(log options mkdir).each do |meth|
+    define_method meth do |*args|
+      self.class.send meth, *args
     end
   end
 
-  def self.allocate uri
-    a = Accept.new
+  def initialize
+    require 'socket'
+    @sock=Addrinfo.tcp('127.0.0.1', 0).listen 1
+  end
 
+  def myport
+    Socket.unpack_sockaddr_in(@sock.getsockname).first
+  end
+
+  def rport
+    sock=@sock.accept.first
+    at_exit{sock}
+    sock.gets.to_i
+  end
+
+  def allocate uri
     puts "Running WSSH proxy..."
-    spawn *%w(bundle exec wssh ephemeral), a.myport.to_s, uri,
+    spawn *%w(bundle exec wssh ephemeral), myport.to_s, uri,
       %i(out err)=>File.open(mkdir(:log), 'a')
 
-    a.port
+    rport
+  end
+
+  def self.allocate uri
+    new.allocate uri
   end
 
   def self.help
@@ -79,7 +85,7 @@ For internal use.
     end
   end
 
-  def onlisten port
+  def self.onlisten port
     EM.connect 'localhost', ARGV[0], Parent, port
   end
 
