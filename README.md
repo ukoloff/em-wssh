@@ -163,6 +163,10 @@ end
 Use this task `cap stage wssh task(s)...` to tunnel all Capistrano ssh traffic through
 WSSH server.
 
+In addition, if WSSH URL is secure (wss: or https:) and Ephemeral module is running on Windows,
+it automagically starts small Node.js process that wraps traffic into TLS.
+This behavour can be disabled by setting Ephemeral.options[:tlswrap]=false
+
 ## Data flow
 
 Normal SSH session is very simple:
