@@ -50,7 +50,7 @@ Running client from terminal is not very useful. It should be called by ssh clie
 ssh -o ProxyCommand='wssh client wss://server.host.com/ssh/%h' sshd.local
 ```
 
-By default WSSH server has 60 seconds timeout. To prevent idle connection to drop,
+By default nginx has 60 seconds timeout. To prevent idle connection to drop,
 one can use `ServerAliveInterval` parameter:
 
 ```sh

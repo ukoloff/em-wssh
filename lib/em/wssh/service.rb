@@ -17,6 +17,7 @@ module Service
   -d --daemon      Run daemonized
   -h --help        Show this help
   -l --listen=port Listen to port
+  -p --ping[=sec]  Periodic ping
   -v --version     Show version
 EOF
     exit 1
@@ -30,6 +31,7 @@ EOF
       ['-d', '--daemon', GetoptLong::NO_ARGUMENT],
       ['-a', '--all', GetoptLong::NO_ARGUMENT],
       ['-v', '--version', GetoptLong::NO_ARGUMENT],
+      ['-p', '--ping', GetoptLong::OPTIONAL_ARGUMENT],
     )
     begin
       opts.each do |opt, arg|
@@ -42,6 +44,9 @@ EOF
           options[:base]=File.expand_path arg
         when '-a'
           options[:host]='0.0.0.0'
+        when '-p'
+          arg=arg.to_i
+          options[:ping]= arg<1 ? 50 : arg
         when '-v'
           puts VERSION
           exit 1
