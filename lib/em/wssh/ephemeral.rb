@@ -83,7 +83,8 @@ For internal use.
     Connect.options.merge!(
       port: 0,
       uri: ARGV[1],
-      onlisten: Proc.new{|port| onlisten port}
+      ping: 50,
+      onlisten: Proc.new{|port| onlisten port},
     )
     Connect.loop!
   end

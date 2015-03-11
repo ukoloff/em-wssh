@@ -66,6 +66,12 @@ Simple HTTP CONNECT proxy to WSSH daemon
     def onopen
       log "Connected to WSSHD"
       http.onopen
+      pinger
+    end
+
+    def pinger
+      return unless t=Connect.options[:ping]
+      @timer=EM::PeriodicTimer.new(t){@ws.ping if @ws}
     end
 
     def onmessage data
@@ -85,6 +91,7 @@ Simple HTTP CONNECT proxy to WSSH daemon
     def bye
       http.close_connection if http
       @ws.close if @ws
+      @timer.cancel if @timer
       instance_variables.each{|v| remove_instance_variable v if '@count'!=v.to_s}
     end
   end
