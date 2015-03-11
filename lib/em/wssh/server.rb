@@ -94,6 +94,12 @@ EOF
       end
       log "Connecting to", host
       EM.connect host, 22, Ssh, self
+      pinger
+    end
+
+    def pinger
+      return unless t=Server.options[:ping]
+      @timer=EM::PeriodicTimer.new(t){ws.ping if ws}
     end
 
     def ondata msg
@@ -148,6 +154,7 @@ EOF
     def bye
       ssh.close_connection if ssh
       ws.close if ws
+      @timer.cancel if @timer
       instance_variables.each{|v| remove_instance_variable v if '@count'!=v.to_s}
     end
   end
