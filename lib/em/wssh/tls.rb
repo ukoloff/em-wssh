@@ -2,36 +2,47 @@ require 'socket'
 require 'openssl'
 require 'openssl/win/root' if Gem.win_platform?
 
-require_relative '../wssh'
+require_relative 'service'
 
 module EventMachine::Wssh
 class TLS
+  extend Service
+
   Chunk=0x10000
 
   def self.run! host
     @@host=host
     s=TCPServer.new '127.0.0.1', 0
-    puts "WSTunnel is listening on #{s.addr}"
+    log "WSTunnel on #{s.addr} -> #{host}"
     Thread.new do
       new s.accept while true
     end
     s.addr[1]
   end
 
+  def self.count
+    @n||=0
+    @n+=1
+  end
+
   def initialize client
-    @host
+    @count=self.class.count
     @client=client
     @t1=Thread.new{cloop!}
   end
 
+  def log *msg
+    self.class.log "<&#{@count}>", *msg
+  end
+
   def cloop!
     begin
-      puts "<Client from=#{@client.addr}>"
+      log "Connected from", @client.peeraddr
       cloop
     rescue=>e
-      puts "Client error: #{e}"
+      log "Client error", e
     ensure
-      puts "</Client>"
+      log "Client disconnected"
       @client.close
       @t2.exit if @t2
     end
@@ -62,7 +73,6 @@ class TLS
     srv=OpenSSL::SSL::SSLSocket.new srv, ctx
     srv.hostname=@@host if srv.respond_to? :hostname=
     srv.connect
-    puts "Connected to server; #{srv.verify_result}"
     srv
   end
 
@@ -80,12 +90,12 @@ class TLS
 
   def sloop!
     begin
-      puts "<Server>"
+      log "Connected to server;", "Verify=#{@server.verify_result}"
       sloop
     rescue=>e
-      puts "Server error: #{e}"
+      log "Server error", e
     ensure
-      puts "</Server>"
+      log "Server disconnected"
       @server.close
       @t1.exit
     end

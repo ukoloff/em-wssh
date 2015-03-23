@@ -168,7 +168,7 @@ Simple HTTP CONNECT proxy to WSSH daemon
   end
 
   def self.listen!
-    options[:uri]=Uri.wrap options[:uri]
+    options[:uri]=TLS.wrap options[:uri]
     conn=EM.start_server options[:host], options[:port], Http
     options[:onlisten].call Socket.unpack_sockaddr_in(EM.get_sockname conn)[0] if options[:onlisten]
   end
