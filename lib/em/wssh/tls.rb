@@ -2,7 +2,10 @@ require 'Socket'
 require 'openssl'
 require 'openssl/win/root' if Gem.win_platform?
 
-class Tunnel
+require_relative '../wssh'
+
+module EventMachine::Wssh
+class TLS
   Host='ya.ru'
 
   Chunk=0x10000
@@ -95,4 +98,5 @@ class Tunnel
   end
 
   run!
+end
 end
