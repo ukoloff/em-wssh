@@ -5,11 +5,9 @@ class Ephemeral
   extend Service
 
   @options={
-    tlswrap: true,
     base: '.',
     pid: 'tmp/pids/ephemeral.pid',
     log: 'log/ephemeral.log',
-    tls: 'log/tls.log',
   }
 
   %i(log options mkdir).each do |meth|
@@ -33,24 +31,7 @@ class Ephemeral
     sock.gets.to_i
   end
 
-  def tlswrap uri
-    return uri unless options[:tlswrap] and Gem.win_platform?
-    require 'uri'
-    z = URI uri
-    return uri unless %w(wss https).include? z.scheme
-    log "Running TLS Wrapper..."
-    spawn 'node', '.', myport.to_s, z.host,
-      chdir: __dir__,
-      %i(out err)=>File.open(mkdir(:tls), 'a')
-    z.scheme='ws'
-    z.host='localhost'
-    z.port=rport
-    z.to_s
-  end
-
   def allocate uri
-    uri = tlswrap uri
-
     log "Running WSSH proxy..."
     spawn *%w(bundle exec wssh ephemeral), myport.to_s, uri,
       %i(out err)=>File.open(mkdir(:log), 'a')
