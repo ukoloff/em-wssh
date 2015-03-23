@@ -1,4 +1,4 @@
-require 'Socket'
+require 'socket'
 require 'openssl'
 require 'openssl/win/root' if Gem.win_platform?
 
@@ -6,27 +6,28 @@ require_relative '../wssh'
 
 module EventMachine::Wssh
 class TLS
-  Host='ya.ru'
-
   Chunk=0x10000
 
-  def self.run!
-    puts "WSTunnel is listening..."
-    Socket.tcp_server_loop 'localhost', 8082 do |client, addr|
-      puts "Connected from #{addr.ip_address}:#{addr.ip_port}"
-      new client
+  def self.run! host
+    @@host=host
+    s=TCPServer.new '127.0.0.1', 0
+    puts "WSTunnel is listening on port #{s.addr[1]}"
+    Thread.new do
+      new s.accept while true
     end
+    sleep 10000
+    s.addr[1]
   end
 
   def initialize client
-    @host=Host
+    @host
     @client=client
     @t1=Thread.new{cloop!}
   end
 
   def cloop!
     begin
-      puts "<Client>"
+      puts "<Client from=#{@client.addr}>"
       cloop
     rescue=>e
       puts "Client error: #{e}"
@@ -51,16 +52,16 @@ class TLS
     return headers if headers.length<1
     verb=headers.shift
     [verb]+
-    %w(Host Origin).map{|h| "#{h}: #{@host}"}+
+    %w(Host Origin).map{|h| "#{h}: #{@@host}"}+
     headers.reject{|h| /^(?:host|origin):/i.match h}
   end
 
   def connect!
-    srv=Socket.tcp @host, 443
+    srv=Socket.tcp @@host, 443
     ctx=OpenSSL::SSL::SSLContext.new
     ctx.set_params verify_mode: OpenSSL::SSL::VERIFY_PEER
     srv=OpenSSL::SSL::SSLSocket.new srv, ctx
-    srv.hostname=@host if srv.respond_to? :hostname=
+    srv.hostname=@@host if srv.respond_to? :hostname=
     srv.connect
     puts "Connected to server; #{srv.verify_result}"
     srv
@@ -97,6 +98,6 @@ class TLS
     @client.write @server.readpartial Chunk until @server.eof
   end
 
-  run!
+  run! 'ya.ru'
 end
 end
