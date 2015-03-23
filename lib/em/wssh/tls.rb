@@ -11,11 +11,10 @@ class TLS
   def self.run! host
     @@host=host
     s=TCPServer.new '127.0.0.1', 0
-    puts "WSTunnel is listening on port #{s.addr[1]}"
+    puts "WSTunnel is listening on #{s.addr}"
     Thread.new do
       new s.accept while true
     end
-    sleep 10000
     s.addr[1]
   end
 
@@ -97,7 +96,5 @@ class TLS
     @headers=nil
     @client.write @server.readpartial Chunk until @server.eof
   end
-
-  run! 'ya.ru'
 end
 end

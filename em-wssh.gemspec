@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "em-websocket"    # server side
   spec.add_dependency "faye-websocket"  # client side
+  spec.add_dependency "openssl-win-root" if Gem.win_platform?
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
