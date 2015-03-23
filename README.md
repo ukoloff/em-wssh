@@ -34,6 +34,23 @@ Single command `wssh` is exported. Sometimes it should be `bundle exec wssh`.
 
 To run WSSH server say `wssh server`.
 
+You can set some options for server, ie:
+
+Most useful option is `--base=path` (or `-b`). It set path, where server files stored.
+By default this path is where gem installed. To use current directory say `wssh server -b.`
+
+This `base` path is used to locate `hosts.yml` file, which maps host requested by user to real servers.
+See [sample](hosts.yml). One can define direct map or regexp-style mapping (denoted by // with optional //i).
+If multiple regexps match user host, the last one wins.
+To disable connecting to host (or all hosts for regexp) map it to null or false.
+
+The `base` also is root for log file and pid file, created by server.
+
+Parameters `--listen=port` (`-l`) and `--all` (`-a`) define on what address server will listen.
+By default it is `localhost:4567`.
+
+Parameter `--daemon` will force server to go in background.
+
 ### nginx
 
 Directly exposing WSSH server to Internet is not a good idea.
@@ -76,6 +93,11 @@ x=Net::SSH.start 'sshd.local', 'root',
 
 puts x.exec! 'hostname'
 ```
+
+Proxy allows the same command line parameters as server.
+For proxy parameter `--ping` may be useful,
+it forces proxy to periodically send Websocket ping packets to server
+for nginx to not drop connection on timeout.
 
 ## API
 
