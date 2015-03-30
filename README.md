@@ -185,10 +185,6 @@ end
 Use this task `cap stage wssh task(s)...` to tunnel all Capistrano ssh traffic through
 WSSH server.
 
-In addition, if WSSH URL is secure (wss: or https:) and Ephemeral module is running on Windows,
-it automagically starts small Node.js process that wraps traffic into TLS.
-This behavour can be disabled by setting Ephemeral.options[:tlswrap]=false
-
 ## Data flow
 
 Normal SSH session is very simple:
@@ -210,7 +206,7 @@ WSSH session is:
 
 And nginx stage can be omited in development/testing scenarios.
 
-In some scenarios this path can be even longer:
+When using WSSH Proxy this path is even longer:
 
   * SSH Client, capable to connect via HTTP proxy (eg PuTTY/PLink or Net::SSH)
   * TCP connection to local proxy
@@ -228,15 +224,13 @@ Windows installation of EventMachine has a few bugs:
 
   1. Using STDIN [blocks](https://groups.google.com/forum/#!topic/eventmachine/5rDIOA2uOoA) all other connections
   2. By default SSL/TLS is not available
-  3. No root certificates available ([Fixed](https://github.com/ukoloff/openssl-win-root))
+  3. No root certificates available ([Fix](https://github.com/ukoloff/openssl-win-root) exists)
 
-So, this package is in fact almost unusable on MS Windows.
+So, pure EventMachine package would be almost unusable on MS Windows.
 
-The only exception: if you connect to Non-TLS WSSH server
-(ws: or http:, not wss: or https:), you **can** start `wssh connect`
-and then use SSH client, capable to connect via HTTP proxy.
+To fix this multithreaded TLS wrapper is automagically started by `wssh connect`.
 
-To connect to TLS WSSH server, you should use Node.js version.
+WSSH client is still unusable on Windows :-(
 
 ## See also
 
