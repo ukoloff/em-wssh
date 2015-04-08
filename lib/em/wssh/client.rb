@@ -22,10 +22,32 @@ WSSH client
     @uri=ARGV[0]
   end
 
+  class Stdio
+    Chunk=0x10000
+
+    def initialize srv
+      @srv=srv
+      @t=Thread.new{loop}
+    end
+
+    def loop
+      begin
+        until STDIN.eof
+          @srv.send STDIN.readpartial Chunk
+        end
+      rescue=>e
+      ensure
+        EM.stop
+      end
+    end
+
+    def bye
+      @t.exit
+    end
+  end
+
   class Ws
     def initialize uri
-      @buf=[]
-
       @ws=Faye::WebSocket::Client.new uri
 
       @ws.on :open do |event| onopen end
@@ -34,21 +56,16 @@ WSSH client
       @ws.on :error do |error| onerror error end
     end
 
-    def queue data
-      if @buf
-        @buf << data
-      else
-        @ws.send data
-      end
+    def send data
+      @ws.send data.unpack 'C*'
     end
 
     def onopen
-      @buf.each{|data| @ws.send data}
-      @buf=nil
+      @stdio=Stdio.new self
     end
 
     def onmessage data
-      print data.pack 'C*'
+      STDOUT << data.pack('C*')
     end
 
     def onclose
@@ -60,29 +77,15 @@ WSSH client
     end
 
     def bye
+      @stdio.bye if @stdio
       @ws.close if @ws
       @ws=nil
-      @buf=nil
-      EM.stop_event_loop
-    end
-  end
-
-  module Stdio
-    def initialize ws
-      @ws = ws
-    end
-
-    def receive_data data
-      @ws.queue data.unpack 'C*'
-    end
-
-    def unbind
-      @ws.bye
+      EM.stop
     end
   end
 
   def self.listen!
-    EM.attach $stdin, Stdio, Ws.new(@uri)
+    Ws.new @uri
   end
 
   def self.loop!
@@ -93,6 +96,8 @@ WSSH client
   def self.go!
     getopt
     STDOUT.sync=true
+    STDIN.binmode
+    STDOUT.binmode
     loop!
   end
 end
