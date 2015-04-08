@@ -1,4 +1,4 @@
-require_relative '../wssh'
+require_relative 'uri'
 
 module EventMachine::Wssh
 module Client
@@ -85,7 +85,7 @@ WSSH client
   end
 
   def self.listen!
-    Ws.new @uri
+    Ws.new TLS.wrap @uri
   end
 
   def self.loop!
