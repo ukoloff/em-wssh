@@ -4,6 +4,11 @@ require_relative '../wssh'
 
 module EventMachine::Wssh
 class TLS
+  @options={}
+
+  def self.mute!
+    @options[:mute]=true
+  end
 
   def self.wrap uri
     return uri unless Gem.win_platform?

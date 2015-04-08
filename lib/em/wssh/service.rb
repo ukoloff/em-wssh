@@ -5,8 +5,9 @@ module Service
   attr_reader :options
 
   def log *msg
+    return if options[:mute]
     msg.unshift "[#{Time.now}]"
-    print msg*' '+"\n"
+    STDOUT << msg*' '+"\n"
   end
 
   def helptions

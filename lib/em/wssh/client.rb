@@ -85,6 +85,7 @@ WSSH client
   end
 
   def self.listen!
+    TLS.mute!
     Ws.new TLS.wrap @uri
   end
 
